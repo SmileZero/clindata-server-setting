@@ -3,7 +3,8 @@ MacOS: ```brew install ansible```
 
 
 ### 2. Put Server IP or DNS you want to set up in ./hosts
-Create the ```./hosts``` according to the ```./host.example```.
+Create the ```./hosts``` and add server ip or dns to it.
+You can find an example in ```./host.example```.
 You can also put multiple server ip or DNS in the ```./host``` file line by line.
 
 
