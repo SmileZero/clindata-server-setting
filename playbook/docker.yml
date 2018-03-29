@@ -62,8 +62,8 @@
         name: docker
         state: present
 
-    - name: Add the user 'ubuntu' to group 'docker'
+    - name: Add the ansible_ssh_user to group 'docker'
       user:
-        name: ubuntu
+        name: "{{ansible_ssh_user}}"
         groups: docker
         append: yes
