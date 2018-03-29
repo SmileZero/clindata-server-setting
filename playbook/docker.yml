@@ -1,0 +1,69 @@
+---
+- hosts: all
+  become: yes
+  gather_facts: False
+  pre_tasks:
+    - name: Install python for Ansible
+      raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+      register: output
+      changed_when: output.stdout != ""
+      tags: always
+  tasks:
+    - name: Run "apt-get update"
+      apt:
+        update_cache: yes
+
+    - shell: uname -r
+      ignore_errors: yes
+      register: uname_result
+
+    - debug: msg="{{ uname_result.stdout }}"
+
+    - name: install linux-image-extra-$(uname -r)
+      apt:
+        name: "linux-image-extra-{{uname_result.stdout}}"
+      ignore_errors: yes
+      when: uname_result.stdout.find('aws') == -1
+
+    - name: install linux-image-extra-virtual
+      apt:
+        name: linux-image-extra-virtual
+        state: present
+
+    - name: install packages
+      apt: name={{item}} state=present update_cache=yes
+      with_items:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - software-properties-common
+
+    - name: add GPG key
+      shell: curl -fsSL https://mirrors.ustc.edu.cn/docker-ce/linux/ubuntu/gpg | sudo apt-key add -
+
+    - name: add apt repository
+      shell: add-apt-repository "deb [arch=amd64] https://mirrors.ustc.edu.cn/docker-ce/linux/ubuntu $(lsb_release -cs) stable"
+
+    - name: install docker-ce
+      apt:
+        name: docker-ce
+        state: present
+        update_cache: yes
+
+    - name: enable service docker and start it
+      systemd:
+        name: docker
+        enabled: yes
+        masked: no
+        state: started
+
+    - name: Ensure group "docker" exists
+      group:
+        name: docker
+        state: present
+
+    - name: Add the user 'ubuntu' to group 'docker'
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes
